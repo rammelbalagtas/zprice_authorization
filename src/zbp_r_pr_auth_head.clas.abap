@@ -1,0 +1,5 @@
+CLASS zbp_r_pr_auth_head DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zr_pr_auth_head.
+ENDCLASS.
+
+CLASS zbp_r_pr_auth_head IMPLEMENTATION.
+ENDCLASS.

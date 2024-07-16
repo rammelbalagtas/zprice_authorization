@@ -1,0 +1,116 @@
+managed implementation in class zbp_r_pr_auth_head unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZR_PR_AUTH_HEAD alias Header
+persistent table zpr_auth_head
+draft table zdpr_auth_head
+lock master total etag Locallastchangedat
+early numbering
+authorization master ( instance )
+
+{
+  create;
+  update;
+  delete;
+  field ( readonly ) PriceAuth, AttachmentDownload;
+  association _Item { create; with draft; }
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+  mapping for zpr_auth_head
+    {
+      PriceAuth          = price_auth;
+      highpriority       = high_priority;
+      description        = description;
+      ValidFrom          = valid_from;
+      ValidTo            = valid_to;
+      status             = status;
+      submittedto        = submitted_to;
+      notify             = notify;
+      attachmentupload   = attachment_u;
+      mimetypeUpload     = mimetype_u;
+      filenameUpload     = filename_u;
+      attachmentDownload = attachment_d;
+      mimetypeDownload   = mimetype_d;
+      filenameDownload   = filename_d;
+      LocalCreatedBy     = localcreatedby;
+      LocalCreatedAt     = localcreatedat;
+      LocalLastChangedBy = locallastchangedby;
+      LocalLastChangedAt = locallastchangedat;
+      LastChangedAt      = lastchangedat;
+    }
+}
+
+define behavior for ZR_PR_AUTH_ITEM alias Item
+persistent table zpr_auth_item
+draft table zdpr_auth_item
+lock dependent by _Header
+authorization dependent by _Header
+etag master LocalLastChangedAt
+{
+  update;
+  delete;
+  field ( readonly ) PriceAuth, Reject, PpImpact, OnhandIncImpact, GmActual, Map;
+  field ( mandatory : create, readonly : update ) Material;
+  association _Header { with draft; }
+  association _Customer { create; with draft; }
+  association _Price { internal create; with draft; }
+
+//  mapping for zpr_auth_item
+//    {
+//      PriceAuth          = price_auth;
+//      material           = material;
+//      sequence           = sequence;
+//      reject             = reject;
+//      gmbudget           = gm_budget;
+//      gmactual           = gm_actual;
+//      estorefreeze       = estore_freeze;
+//      priceprot          = price_prot;
+//      ppimpact           = pp_impact;
+//      onhandinc          = onhand_inc;
+//      onhandincimpact    = onhand_inc_impact;
+//      map                = map;
+//      status             = status;
+//      unit               = unit;
+//      currency           = currency;
+//      LocalCreatedBy     = localcreatedby;
+//      LocalCreatedAt     = localcreatedat;
+//      LocalLastChangedBy = locallastchangedby;
+//      LocalLastChangedAt = locallastchangedat;
+//      LastChangedAt      = lastchangedat;
+//    }
+}
+
+define behavior for ZR_PR_AUTH_PRICE alias Price
+persistent table zpr_auth_price
+draft table zdpr_auth_price
+lock dependent by _Header
+authorization dependent by _Header
+etag master LocalLastChangedAt
+{
+  update;
+  internal delete;
+  field ( readonly ) PriceAuth, Material, CondType, DealerMargin, PCIMargin, PriceCurr;
+  association _Header { with draft; }
+  association _Item { with draft; }
+}
+
+define behavior for ZR_PR_AUTH_CUST alias Customer
+persistent table zpr_auth_cust
+draft table zdpr_auth_cust
+lock dependent by _Header
+authorization dependent by _Header
+etag master LocalLastChangedAt
+{
+  update;
+  delete;
+  field ( readonly ) PriceAuth, Material, CondType, DealerMargin, PCIMargin;
+  field ( mandatory : create, readonly : update ) Customer;
+  association _Header { with draft; }
+  association _Item { with draft; }
+}

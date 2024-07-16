@@ -1,0 +1,39 @@
+@Metadata.layer: #CORE
+
+@UI: { headerInfo: { typeName:       'Pricing and Scale',
+                     typeNamePlural: 'Pricing and Scale' } }
+                                       
+annotate entity ZC_PR_AUTH_PRICE with
+{
+  @UI.lineItem: [{ position: 10 }]
+  CondType;
+  @UI.lineItem: [{ position: 20 }]
+  PriceNew;
+  @UI.lineItem: [{ position: 30 }]
+  PriceCurr;
+  @UI.lineItem: [{ position: 40 }]
+  DealerMargin;
+  @UI.lineItem: [{ position: 50 }]
+  PCIMargin;
+  @UI.lineItem: [{ position: 60 }]
+  Scale1;
+  @UI.lineItem: [{ position: 70 }]
+  Scale1Price;
+  @UI.lineItem: [{ position: 80 }]
+  Scale2;
+  @UI.lineItem: [{ position: 90 }]
+  Scale2Price;
+  @UI.lineItem: [{ position: 100 }]
+  Scale3;
+  @UI.lineItem: [{ position: 110 }]
+  Scale3Price;
+  @UI.lineItem: [{ position: 120 }]
+  Scale4;
+  @UI.lineItem: [{ position: 130 }]
+  Scale4Price;
+  @UI.lineItem: [{ position: 140 }]
+  Scale5;
+  @UI.lineItem: [{ position: 150 }]
+  Scale5Price;
+
+}

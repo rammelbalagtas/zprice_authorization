@@ -1,0 +1,8 @@
+@EndUserText.label: 'Price Authorization'
+@ObjectModel.leadingEntity.name: 'ZC_PR_AUTH_HEAD'
+define service ZSD_PR_AUTH {
+  expose ZC_PR_AUTH_HEAD;
+  expose ZC_PR_AUTH_ITEM;
+  expose ZC_PR_AUTH_PRICE;
+  expose ZC_PR_AUTH_CUST;
+}
