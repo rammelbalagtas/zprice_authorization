@@ -6,8 +6,8 @@ define view entity ZC_PR_AUTH_CUST
 {
   key PriceAuth,
   key Material,
-  key CondType,
   key Customer,
+      CondType,
       PriceNew,
       Currency,
       DealerMargin,

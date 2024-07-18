@@ -1,12 +1,18 @@
 projection;
-strict ( 2 );
+strict ( 1 );
 use draft;
+use side effects;
 
 define behavior for ZC_PR_AUTH_HEAD //alias <alias_name>
 {
   use create;
   use update;
   use delete;
+
+  use action importFile;
+  use action exportFile;
+  use action validateEntries;
+  use action submit result entity ZC_PR_AUTH_HEAD;
 
   use action Edit;
   use action Activate;
@@ -21,6 +27,9 @@ define behavior for ZC_PR_AUTH_ITEM //alias <alias_name>
 {
   use update;
   use delete;
+
+  use action addNotes;
+//  use function GetDefaultsForaddNotes ;
 
   use association _Header { with draft; }
   use association _Customer { create; with draft; }

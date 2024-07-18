@@ -1,5 +1,6 @@
 managed implementation in class zbp_r_pr_auth_head unique;
-strict ( 2 );
+//strict ( 2 );
+strict( 1 );
 with draft;
 
 define behavior for ZR_PR_AUTH_HEAD alias Header
@@ -13,7 +14,7 @@ authorization master ( instance )
   create;
   update;
   delete;
-  field ( readonly ) PriceAuth, AttachmentDownload;
+  field ( readonly ) PriceAuth, AttachmentDownload, StatusText;
   association _Item { create; with draft; }
 
   draft action Edit;
@@ -21,6 +22,20 @@ authorization master ( instance )
   draft action Discard;
   draft action Resume;
   draft determine action Prepare;
+
+  action importFile result [1] $self;
+  action exportFile result [1] $self;
+  action validateEntries;
+  action submit result [1] entity ZR_PR_AUTH_HEAD;
+
+  validation validateOnSave on save { create; update; }
+
+  side effects
+  {
+    action exportFile affects $self;
+    action importFile affects entity _Item;
+    action submit affects $self;
+  }
 
   mapping for zpr_auth_head
     {
@@ -61,29 +76,41 @@ etag master LocalLastChangedAt
   association _Customer { create; with draft; }
   association _Price { internal create; with draft; }
 
-//  mapping for zpr_auth_item
-//    {
-//      PriceAuth          = price_auth;
-//      material           = material;
-//      sequence           = sequence;
-//      reject             = reject;
-//      gmbudget           = gm_budget;
-//      gmactual           = gm_actual;
-//      estorefreeze       = estore_freeze;
-//      priceprot          = price_prot;
-//      ppimpact           = pp_impact;
-//      onhandinc          = onhand_inc;
-//      onhandincimpact    = onhand_inc_impact;
-//      map                = map;
-//      status             = status;
-//      unit               = unit;
-//      currency           = currency;
-//      LocalCreatedBy     = localcreatedby;
-//      LocalCreatedAt     = localcreatedat;
-//      LocalLastChangedBy = locallastchangedby;
-//      LocalLastChangedAt = locallastchangedat;
-//      LastChangedAt      = lastchangedat;
-//    }
+  action addNotes parameter zpr_auth_item_notes;
+//  action addNotes parameter zpr_auth_item_notes { default function GetDefaultsForaddNotes; }
+
+  determination setDefaultValues on modify { create; }
+  determination onModifyPriceProt on modify { create; field PriceProt; }
+
+  side effects {
+    field PriceProt affects field PPImpact;
+    action addNotes affects $self;
+  }
+
+  mapping for zpr_auth_item
+    {
+      PriceAuth          = price_auth;
+      Material           = material;
+      sequence           = sequence;
+      reject             = reject;
+      gmbudget           = gm_budget;
+      gmactual           = gm_actual;
+      estorefreeze       = estore_freeze;
+      priceprot          = price_prot;
+      ppimpact           = pp_impact;
+      onhandinc          = onhand_inc;
+      onhandincimpact    = onhand_inc_impact;
+      map                = map;
+      status             = status;
+      unit               = unit;
+      currency           = currency;
+      Notes              = notes;
+      LocalCreatedBy     = localcreatedby;
+      LocalCreatedAt     = localcreatedat;
+      LocalLastChangedBy = locallastchangedby;
+      LocalLastChangedAt = locallastchangedat;
+      LastChangedAt      = lastchangedat;
+    }
 }
 
 define behavior for ZR_PR_AUTH_PRICE alias Price
@@ -98,6 +125,34 @@ etag master LocalLastChangedAt
   field ( readonly ) PriceAuth, Material, CondType, DealerMargin, PCIMargin, PriceCurr;
   association _Header { with draft; }
   association _Item { with draft; }
+  determination onModifyPriceNew on modify { create; field PriceNew; }
+
+  mapping for zpr_auth_price
+    {
+      PriceAuth          = price_auth;
+      Material           = material;
+      condtype           = cond_type;
+      pricenew           = price_new;
+      pricecurr          = price_curr;
+      dealermargin       = dealer_margin;
+      pcimargin          = pci_margin;
+      scale1             = scale1;
+      Scale1Price        = s1price;
+      scale2             = scale2;
+      Scale2Price        = s2price;
+      scale3             = scale3;
+      Scale3Price        = s3price;
+      scale4             = scale4;
+      Scale4Price        = s4price;
+      scale5             = scale5;
+      Scale5Price        = s5price;
+      currency           = currency;
+      LocalCreatedBy     = localcreatedby;
+      LocalCreatedAt     = localcreatedat;
+      LocalLastChangedBy = locallastchangedby;
+      LocalLastChangedAt = locallastchangedat;
+      LastChangedAt      = lastchangedat;
+    }
 }
 
 define behavior for ZR_PR_AUTH_CUST alias Customer
@@ -113,4 +168,22 @@ etag master LocalLastChangedAt
   field ( mandatory : create, readonly : update ) Customer;
   association _Header { with draft; }
   association _Item { with draft; }
+  determination setDefaultValues on modify { create; }
+
+  mapping for zpr_auth_cust
+    {
+      PriceAuth          = price_auth;
+      Material           = material;
+      customer           = customer;
+      condtype           = cond_type;
+      pricenew           = price_new;
+      dealermargin       = dealer_margin;
+      pcimargin          = pci_margin;
+      currency           = currency;
+      LocalCreatedBy     = localcreatedby;
+      LocalCreatedAt     = localcreatedat;
+      LocalLastChangedBy = locallastchangedby;
+      LocalLastChangedAt = locallastchangedat;
+      LastChangedAt      = lastchangedat;
+    }
 }

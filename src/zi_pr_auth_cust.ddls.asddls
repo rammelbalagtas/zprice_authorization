@@ -8,10 +8,10 @@ define view entity ZI_PR_AUTH_CUST
   key price_auth         as PriceAuth,
       @EndUserText.label : 'Material'
   key material           as Material,
-      @EndUserText.label : 'Condition Type'
-  key cond_type          as CondType,
       @EndUserText.label : 'Customer'
   key customer           as Customer,
+      @EndUserText.label : 'Condition Type'
+      cond_type          as CondType,
       @EndUserText.label : 'New'
       price_new          as PriceNew,
       @EndUserText.label : 'Dealer Margin'

@@ -8,8 +8,8 @@ define view entity ZR_PR_AUTH_CUST
 {
   key PriceAuth,
   key Material,
-  key CondType,
   key Customer,
+      CondType,
       PriceNew,
       Currency,
       DealerMargin,

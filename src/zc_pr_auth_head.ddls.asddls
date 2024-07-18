@@ -12,6 +12,7 @@ define root view entity ZC_PR_AUTH_HEAD
       ValidFrom,
       ValidTo,
       Status,
+      StatusText,
       SubmittedTo,
       Notify,
       @Semantics.largeObject: {

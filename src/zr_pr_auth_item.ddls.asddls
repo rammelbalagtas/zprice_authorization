@@ -21,6 +21,7 @@ define view entity ZR_PR_AUTH_ITEM
       Status,
       Unit,
       Currency,
+      Notes,
       Localcreatedby,
       Localcreatedat,
       Locallastchangedby,

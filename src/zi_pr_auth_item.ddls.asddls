@@ -31,6 +31,8 @@ define view entity ZI_PR_AUTH_ITEM
       unit               as Unit,
       @EndUserText.label : 'Currency'
       currency           as Currency,
+      @EndUserText.label : 'Add Notes'
+      notes              as Notes,
       @Semantics.user.createdBy: true
       localcreatedby     as Localcreatedby,
       @Semantics.systemDateTime.createdAt: true

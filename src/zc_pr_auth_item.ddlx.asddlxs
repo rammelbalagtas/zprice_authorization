@@ -1,25 +1,43 @@
 @Metadata.layer: #CORE
 
-@UI: { headerInfo: { typeName:       'Materials',
-                     typeNamePlural: 'Materials',
+@UI: { headerInfo: { typeName:       'Price Authorization',
+                     typeNamePlural: 'Price Authorization',
                      title:          { type: #STANDARD,
                                        label: 'Material',
                                        value: 'Material' } } }
                                        
 annotate entity ZC_PR_AUTH_ITEM with
 {
+//  @UI.facet:
+//        [{
+//            id         : 'Item',
+//            purpose    : #STANDARD,
+//            position   : 10,
+//            label      : 'Item Detail',
+//            type: #IDENTIFICATION_REFERENCE
+//        },
+//        {
+//            id         : 'Price',
+//            purpose    : #STANDARD,
+//            position   : 20,
+//            label      : 'Price',
+//            type       :  #LINEITEM_REFERENCE,
+//            targetElement: '_Price'
+//        },
+//        {
+//            id         : 'Customer',
+//            purpose    : #STANDARD,
+//            position   : 20,
+//            label      : 'Customer',
+//            type       :  #LINEITEM_REFERENCE,
+//            targetElement: '_Customer'
+//        }]
   @UI.facet:
-        [{
-            id         : 'Item',
-            purpose    : #STANDARD,
-            position   : 10,
-            label      : 'Item Detail',
-            type: #IDENTIFICATION_REFERENCE
-        },
+        [
         {
             id         : 'Price',
             purpose    : #STANDARD,
-            position   : 20,
+            position   : 10,
             label      : 'Price',
             type       :  #LINEITEM_REFERENCE,
             targetElement: '_Price'
@@ -41,16 +59,28 @@ annotate entity ZC_PR_AUTH_ITEM with
   @UI.identification: [{ position: 20 }]
   Reject;
 
-  @UI.lineItem: [{ position: 30 }]
+  @UI.lineItem: [
+      {
+        type:#FOR_ACTION,
+        label: 'Add Notes',
+        dataAction: 'addNotes',
+        inline: true,
+        iconUrl: 'sap-icon://notes',
+        emphasized: true,
+        importance: #HIGH,
+        position: 30
+      }, { position: 30 }]
   @UI.identification: [{ position: 30 }]
   EstoreFreeze;
 
   @UI.lineItem: [{ position: 40 }]
   @UI.identification: [{ position: 40 }]
+  @EndUserText.quickInfo : 'Price Protection Quantity'
   PriceProt;
   
   @UI.lineItem: [{ position: 50 }]
   @UI.identification: [{ position: 50 }]
+  @EndUserText.quickInfo : 'Price Protection Impact at ZPX'
   PpImpact;
 
   @UI.lineItem: [{ position: 60 }]

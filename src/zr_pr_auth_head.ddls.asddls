@@ -10,6 +10,10 @@ define root view entity ZR_PR_AUTH_HEAD
       ValidFrom,
       ValidTo,
       Status,
+      cast( case when Status is initial then 'Draft'
+                 when Status = '03' then 'Submitted'
+      else 'Pending status mapping'
+      end as abap.char( 50 ) ) as StatusText,
       SubmittedTo,
       Notify,
       AttachmentUpload,

@@ -19,11 +19,11 @@ define view entity ZI_PR_AUTH_HEAD
       submitted_to       as SubmittedTo,
       @EndUserText.label : 'Notify'
       notify             as Notify,
-      @EndUserText.label : 'Last imported file'
+      @EndUserText.label : 'File to import'
       attachment_u       as AttachmentUpload,
       mimetype_u         as MimeTypeUpload,
       filename_u         as FilenameUpload,
-      @EndUserText.label : 'Last exported file'
+      @EndUserText.label : 'File to export'
       attachment_d       as AttachmentDownload,
       mimetype_d         as MimeTypeDownload,
       filename_d         as FilenameDownload,
