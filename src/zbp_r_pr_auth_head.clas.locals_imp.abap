@@ -4,6 +4,8 @@ CLASS lhc_price DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS onModifyPriceNew FOR DETERMINE ON MODIFY
       IMPORTING keys FOR Price~onModifyPriceNew.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR Price RESULT result.
 
 ENDCLASS.
 
@@ -41,6 +43,48 @@ CLASS lhc_price IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD get_instance_features.
+    READ ENTITIES OF zr_pr_auth_head IN LOCAL MODE
+        ENTITY Price
+          FIELDS ( CondType )
+          WITH CORRESPONDING #( keys )
+        RESULT DATA(lt_price).
+
+    result = VALUE #( FOR ls_price IN lt_price
+                      ( %tky      = ls_price-%tky
+                        %field-Scale1 = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale1Price = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale2 = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale2Price = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale3 = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale3Price = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale4 = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale4Price = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale5 = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                        %field-Scale5Price = COND #( WHEN ls_price-condtype = 'ZPR'
+                                                THEN if_abap_behv=>fc-f-unrestricted
+                                                ELSE if_abap_behv=>fc-f-read_only )
+                       ) ).
   ENDMETHOD.
 
 ENDCLASS.

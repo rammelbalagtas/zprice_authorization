@@ -5,58 +5,76 @@
                      title:          { type: #STANDARD,
                                        label: 'Material',
                                        value: 'Material' } } }
-                                       
+
 annotate entity ZC_PR_AUTH_ITEM with
 {
-//  @UI.facet:
-//        [{
-//            id         : 'Item',
-//            purpose    : #STANDARD,
-//            position   : 10,
-//            label      : 'Item Detail',
-//            type: #IDENTIFICATION_REFERENCE
-//        },
-//        {
-//            id         : 'Price',
-//            purpose    : #STANDARD,
-//            position   : 20,
-//            label      : 'Price',
-//            type       :  #LINEITEM_REFERENCE,
-//            targetElement: '_Price'
-//        },
-//        {
-//            id         : 'Customer',
-//            purpose    : #STANDARD,
-//            position   : 20,
-//            label      : 'Customer',
-//            type       :  #LINEITEM_REFERENCE,
-//            targetElement: '_Customer'
-//        }]
-  @UI.facet:
-        [
+//    @UI.facet:
+//          [{
+//              id         : 'Item',
+//              purpose    : #STANDARD,
+//              position   : 10,
+//              label      : 'Material',
+//              type: #IDENTIFICATION_REFERENCE
+//          },
+//          {
+//              id         : 'Price',
+//              purpose    : #STANDARD,
+//              position   : 20,
+//              label      : 'Price',
+//              type       :  #LINEITEM_REFERENCE,
+//              targetElement: '_Price'
+//          },
+//          {
+//              id         : 'Customer',
+//              purpose    : #STANDARD,
+//              position   : 20,
+//              label      : 'Customer',
+//              type       :  #LINEITEM_REFERENCE,
+//              targetElement: '_Customer'
+//          }]
+
+  @UI.facet: [
+        {
+          purpose: #STANDARD,
+          id: 'Material',
+          label: 'Material',
+          type: #COLLECTION
+        },
+        {
+          parentId   : 'Material',
+          label      : 'Price Protection',
+          type       : #FIELDGROUP_REFERENCE,
+          targetQualifier: 'PriceProtection'
+        },
+        {
+          parentId   : 'Material',
+          label      : 'Onhand & Inc',
+          type       : #FIELDGROUP_REFERENCE,
+          targetQualifier: 'OHI'
+        },
+        {
+          parentId   : 'Material',
+          label      : 'GM',
+          type       : #FIELDGROUP_REFERENCE,
+          targetQualifier: 'GM'
+        },  
         {
             id         : 'Price',
-            purpose    : #STANDARD,
-            position   : 10,
             label      : 'Price',
             type       :  #LINEITEM_REFERENCE,
             targetElement: '_Price'
         },
         {
             id         : 'Customer',
-            purpose    : #STANDARD,
-            position   : 20,
             label      : 'Customer',
             type       :  #LINEITEM_REFERENCE,
             targetElement: '_Customer'
         }]
 
   @UI.lineItem: [{ position: 10 }]
-  @UI.identification: [{ position: 10 }]
   Material;
-  
+
   @UI.lineItem: [{ position: 20 }]
-  @UI.identification: [{ position: 20 }]
   Reject;
 
   @UI.lineItem: [
@@ -70,37 +88,47 @@ annotate entity ZC_PR_AUTH_ITEM with
         importance: #HIGH,
         position: 30
       }, { position: 30 }]
-  @UI.identification: [{ position: 30 }]
   EstoreFreeze;
 
   @UI.lineItem: [{ position: 40 }]
-  @UI.identification: [{ position: 40 }]
+  @UI.fieldGroup: [ {
+    position: 10, qualifier: 'PriceProtection', label: 'Quantity'
+  }]
   @EndUserText.quickInfo : 'Price Protection Quantity'
   PriceProt;
-  
+
   @UI.lineItem: [{ position: 50 }]
-  @UI.identification: [{ position: 50 }]
+  @UI.fieldGroup: [ {
+    position: 20, qualifier: 'PriceProtection', label: 'Impact'
+  }]
   @EndUserText.quickInfo : 'Price Protection Impact at ZPX'
   PpImpact;
 
   @UI.lineItem: [{ position: 60 }]
-  @UI.identification: [{ position: 60 }]
-  OnhandInc;  
-  
+  @UI.fieldGroup: [ {
+    position: 10, qualifier: 'OHI', label: 'Quantity'
+  }]
+  OnhandInc;
+
   @UI.lineItem: [{ position: 70 }]
-  @UI.identification: [{ position: 70 }]
-  OnhandIncImpact; 
-  
+  @UI.fieldGroup: [ {
+    position: 20, qualifier: 'OHI', label: 'Impact'
+  }]
+  OnhandIncImpact;
+
   @UI.lineItem: [{ position: 80 }]
-  @UI.identification: [{ position: 80 }]
+  @UI.fieldGroup: [ {
+    position: 10, qualifier: 'GM', label: 'Budget'
+  }]
   GmBudget;
-  
+
   @UI.lineItem: [{ position: 90 }]
-  @UI.identification: [{ position: 90 }]
+  @UI.fieldGroup: [ {
+    position: 20, qualifier: 'GM', label: 'Actual'
+  }]
   GmActual;
 
   @UI.lineItem: [{ position: 100 }]
-  @UI.identification: [{ position: 100 }]
   @UI.selectionField: [{ position: 100 }]
   Map;
 }

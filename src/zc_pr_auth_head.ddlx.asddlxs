@@ -36,6 +36,9 @@ annotate entity ZC_PR_AUTH_HEAD with
                       { type: #FOR_ACTION, label: 'Submit',  dataAction: 'submit' }]
   @UI.selectionField: [{ position: 20 }]
   Description;
+  
+  @UI.selectionField: [{ element: '_Item.Material', position : 30 }]
+  _Item;
 
   @UI.identification: [{ position: 30 }]
   ValidFrom;
@@ -63,5 +66,6 @@ annotate entity ZC_PR_AUTH_HEAD with
 
   @UI.identification: [{ position: 90 }]
   AttachmentDownload;
+  
 
 }

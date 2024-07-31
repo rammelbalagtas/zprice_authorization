@@ -1,7 +1,7 @@
 @EndUserText.label: 'Price Authorization'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Metadata.allowExtensions: true
-
+//@ObjectModel.query.implementedBy: 'ABAP:ZCL_PRAUTH_READ'
 define root view entity ZC_PR_AUTH_HEAD
   provider contract transactional_query
   as projection on ZR_PR_AUTH_HEAD

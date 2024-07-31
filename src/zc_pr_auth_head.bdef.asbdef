@@ -34,6 +34,7 @@ define behavior for ZC_PR_AUTH_ITEM //alias <alias_name>
   use association _Header { with draft; }
   use association _Customer { create; with draft; }
   use association _Price { with draft; }
+
 }
 
 define behavior for ZC_PR_AUTH_CUST //alias <alias_name>
@@ -43,6 +44,7 @@ define behavior for ZC_PR_AUTH_CUST //alias <alias_name>
 
   use association _Header { with draft; }
   use association _Item { with draft; }
+
 }
 
 define behavior for ZC_PR_AUTH_PRICE //alias <alias_name>
