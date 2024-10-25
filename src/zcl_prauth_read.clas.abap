@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_prauth_read IMPLEMENTATION.
+CLASS ZCL_PRAUTH_READ IMPLEMENTATION.
 
 
   METHOD if_rap_query_provider~select.

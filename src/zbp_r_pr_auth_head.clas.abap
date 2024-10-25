@@ -1,5 +1,9 @@
 CLASS zbp_r_pr_auth_head DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zr_pr_auth_head.
+protected section.
+private section.
 ENDCLASS.
 
-CLASS zbp_r_pr_auth_head IMPLEMENTATION.
+
+
+CLASS ZBP_R_PR_AUTH_HEAD IMPLEMENTATION.
 ENDCLASS.

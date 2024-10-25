@@ -77,7 +77,6 @@ etag master LocalLastChangedAt
   association _Price { internal create; with draft; }
 
   action addNotes parameter zpr_auth_item_notes;
-  //  action addNotes parameter zpr_auth_item_notes { default function GetDefaultsForaddNotes; }
 
   determination setDefaultValues on modify { create; }
   determination onModifyPriceProt on modify { create; field PriceProt; }
