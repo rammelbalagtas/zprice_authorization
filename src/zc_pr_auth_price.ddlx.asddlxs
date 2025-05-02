@@ -3,9 +3,10 @@
 @UI: { headerInfo: { typeName:       'Pricing and Scale',
                      typeNamePlural: 'Pricing and Scale' } }
                                        
-annotate entity ZC_PR_AUTH_PRICE with
+annotate entity ZC_PR_AUTH_PRICE
+    with 
 {
-  @UI.lineItem: [{ position: 10 }]
+    @UI.lineItem: [{ position: 10 }]
   CondType;
   @UI.lineItem: [{ position: 20 }]
   PriceNew;
@@ -35,5 +36,5 @@ annotate entity ZC_PR_AUTH_PRICE with
   Scale5;
   @UI.lineItem: [{ position: 150 }]
   Scale5Price;
-
+    
 }

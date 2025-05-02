@@ -1,3 +1,72 @@
+CLASS lsc_zr_pr_auth_head DEFINITION INHERITING FROM cl_abap_behavior_saver.
+
+  PROTECTED SECTION.
+
+    METHODS adjust_numbers REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_zr_pr_auth_head IMPLEMENTATION.
+
+  METHOD adjust_numbers.
+    DATA lv_string TYPE string.
+
+    IF mapped-header IS NOT INITIAL.
+      " Get Numbers
+      TRY.
+          cl_numberrange_runtime=>number_get(
+            EXPORTING
+              nr_range_nr       = '01'
+              object            = '/DMO/TRV_M'
+              quantity          = '1'
+            IMPORTING
+              number            = DATA(number_range_key)
+              returncode        = DATA(number_range_return_code)
+              returned_quantity = DATA(number_range_returned_quantity)
+          ).
+
+        CATCH cx_number_ranges INTO DATA(lx_number_ranges).
+      ENDTRY.
+    ENDIF.
+
+    LOOP AT mapped-header ASSIGNING FIELD-SYMBOL(<fs_header>).
+      <fs_header>-PriceAuth = number_range_key.
+    ENDLOOP.
+
+    LOOP AT mapped-item ASSIGNING FIELD-SYMBOL(<fs_item>).
+      IF <fs_item>-%tmp-PriceAuth IS INITIAL.
+        <fs_item>-PriceAuth = number_range_key.
+      ELSE.
+        <fs_item>-PriceAuth = <fs_item>-%tmp-PriceAuth.
+      ENDIF.
+      <fs_item>-Material = <fs_item>-%tmp-Material.
+    ENDLOOP.
+
+    LOOP AT mapped-price ASSIGNING FIELD-SYMBOL(<fs_price>).
+      IF <fs_price>-%tmp-PriceAuth IS INITIAL.
+        <fs_price>-PriceAuth = number_range_key.
+      ELSE.
+        <fs_price>-PriceAuth = <fs_price>-%tmp-PriceAuth.
+      ENDIF.
+      <fs_price>-Material = <fs_price>-%tmp-Material.
+      <fs_price>-CondType = <fs_price>-%tmp-CondType.
+    ENDLOOP.
+
+    LOOP AT mapped-customer ASSIGNING FIELD-SYMBOL(<fs_customer>).
+      IF <fs_customer>-%tmp-PriceAuth IS INITIAL.
+        <fs_customer>-PriceAuth = number_range_key.
+      ELSE.
+        <fs_customer>-PriceAuth = <fs_customer>-%tmp-PriceAuth.
+      ENDIF.
+      <fs_customer>-PriceAuth = number_range_key.
+      <fs_customer>-Material = <fs_customer>-%tmp-Material.
+      <fs_customer>-Customer = <fs_customer>-%tmp-Customer.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lhc_price DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
   PRIVATE SECTION.
@@ -24,8 +93,11 @@ CLASS lhc_price IMPLEMENTATION.
       READ ENTITIES OF zr_pr_auth_head IN LOCAL MODE
         ENTITY Item
            ALL FIELDS
-        WITH CORRESPONDING #( keys )
-        RESULT DATA(lt_item).
+  WITH VALUE #( ( %pid = ls_price-%pidparent
+                  %is_draft = ls_price-%is_draft
+                  priceauth = ls_price-priceauth
+                  material = ls_price-material ) )
+                RESULT DATA(lt_item).
       READ TABLE lt_item INTO DATA(ls_item) WITH KEY material = ls_price-material.
       IF sy-subrc EQ 0.
         lv_ppimpact = ( ls_price-pricecurr - ls_price-PriceNew ) * ls_item-PriceProt.
@@ -148,6 +220,14 @@ CLASS lhc_item IMPLEMENTATION.
     DATA: lt_data  TYPE STANDARD TABLE OF zpr_auth_price,
           ls_price LIKE LINE OF lt_data.
 
+    READ ENTITIES OF zr_pr_auth_head IN LOCAL MODE
+      ENTITY Item
+         ALL FIELDS
+      WITH CORRESPONDING #(  keys  )
+      RESULT DATA(lt_item).
+
+    READ TABLE lt_item INTO DATA(ls_item) INDEX 1.
+
     ls_price-cond_type = 'ZGO'.
     APPEND ls_price TO lt_data.
     ls_price-cond_type = 'ZP1'.
@@ -159,12 +239,15 @@ CLASS lhc_item IMPLEMENTATION.
 
     lt_price = VALUE #( FOR ls_key IN keys (
                              %is_draft = ls_key-%is_draft
+                             %pid = ls_key-%pid
                              PriceAuth = ls_key-PriceAuth
                              Material  = ls_key-Material
                              %target   = VALUE #( FOR ls_data IN lt_data (
                                                                            %is_draft = ls_key-%is_draft
                                                                            PriceAuth = ls_key-PriceAuth
                                                                            Material = ls_key-Material
+                                                                           %pidparent = ls_key-%pid
+                                                                           %pid_header = ls_item-%pidparent
                                                                            CondType = ls_data-cond_type
                                                                            %control = VALUE #( PriceAuth   = if_abap_behv=>mk-on
                                                                                                Material    = if_abap_behv=>mk-on
@@ -277,12 +360,12 @@ CLASS lhc_Header DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS validateentries FOR MODIFY
       IMPORTING keys FOR ACTION header~validateentries.
-    METHODS validateonsave FOR VALIDATE ON SAVE
-      IMPORTING keys FOR header~validateonsave.
-    METHODS earlynumbering_create FOR NUMBERING
-      IMPORTING entities FOR CREATE header.
-    METHODS validateHeader IMPORTING it_header TYPE tt_header CHANGING ct_reported TYPE tt_reported
-                                                                       ct_failed   TYPE tt_failed.
+*    METHODS validateonsave FOR VALIDATE ON SAVE
+*      IMPORTING keys FOR header~validateonsave.
+*    METHODS earlynumbering_create FOR NUMBERING
+*      IMPORTING entities FOR CREATE header.
+*    METHODS validateHeader IMPORTING it_header TYPE tt_header CHANGING ct_reported TYPE tt_reported
+*                                                                       ct_failed   TYPE tt_failed.
 
 ENDCLASS.
 
@@ -291,60 +374,60 @@ CLASS lhc_Header IMPLEMENTATION.
   METHOD get_instance_authorizations.
   ENDMETHOD.
 
-  METHOD earlynumbering_create.
-
-    DATA:
-      entity        TYPE STRUCTURE FOR CREATE zr_pr_auth_head,
-      priceauth_max TYPE n LENGTH 10.
-
-    " Ensure PR Auth ID is not set yet (idempotent)- must be checked when BO is draft-enabled
-    LOOP AT entities INTO entity WHERE priceauth IS NOT INITIAL.
-      APPEND CORRESPONDING #( entity ) TO mapped-header.
-    ENDLOOP.
-
-    DATA(entities_wo_id) = entities.
-    DELETE entities_wo_id WHERE priceauth IS NOT INITIAL.
-
-    " Get Numbers
-    TRY.
-        cl_numberrange_runtime=>number_get(
-          EXPORTING
-            nr_range_nr       = '01'
-            object            = '/DMO/TRV_M'
-            quantity          = CONV #( lines( entities_wo_id ) )
-          IMPORTING
-            number            = DATA(number_range_key)
-            returncode        = DATA(number_range_return_code)
-            returned_quantity = DATA(number_range_returned_quantity)
-        ).
-      CATCH cx_number_ranges INTO DATA(lx_number_ranges).
-        LOOP AT entities_wo_id INTO entity.
-          APPEND VALUE #(  %cid = entity-%cid
-                           %key = entity-%key
-                           %msg = lx_number_ranges
-                        ) TO reported-header.
-          APPEND VALUE #(  %cid = entity-%cid
-                           %key = entity-%key
-                        ) TO failed-header.
-        ENDLOOP.
-        EXIT.
-    ENDTRY.
-
-    priceauth_max = number_range_key - number_range_returned_quantity.
-
-    " Set Price Authorization ID
-    LOOP AT entities_wo_id INTO entity.
-      priceauth_max += 1.
-      entity-priceauth = priceauth_max .
-
-      APPEND VALUE #( %cid  = entity-%cid
-*                      %key  = entity-%key
-                      priceauth = priceauth_max
-                      %is_draft = if_abap_behv=>mk-on
-                    ) TO mapped-header.
-    ENDLOOP.
-
-  ENDMETHOD.
+*  METHOD earlynumbering_create.
+*
+*    DATA:
+*      entity        TYPE STRUCTURE FOR CREATE zr_pr_auth_head,
+*      priceauth_max TYPE n LENGTH 10.
+*
+*    " Ensure PR Auth ID is not set yet (idempotent)- must be checked when BO is draft-enabled
+*    LOOP AT entities INTO entity WHERE priceauth IS NOT INITIAL.
+*      APPEND CORRESPONDING #( entity ) TO mapped-header.
+*    ENDLOOP.
+*
+*    DATA(entities_wo_id) = entities.
+*    DELETE entities_wo_id WHERE priceauth IS NOT INITIAL.
+*
+*    " Get Numbers
+*    TRY.
+*        cl_numberrange_runtime=>number_get(
+*          EXPORTING
+*            nr_range_nr       = '01'
+*            object            = '/DMO/TRV_M'
+*            quantity          = CONV #( lines( entities_wo_id ) )
+*          IMPORTING
+*            number            = DATA(number_range_key)
+*            returncode        = DATA(number_range_return_code)
+*            returned_quantity = DATA(number_range_returned_quantity)
+*        ).
+*      CATCH cx_number_ranges INTO DATA(lx_number_ranges).
+*        LOOP AT entities_wo_id INTO entity.
+*          APPEND VALUE #(  %cid = entity-%cid
+*                           %key = entity-%key
+*                           %msg = lx_number_ranges
+*                        ) TO reported-header.
+*          APPEND VALUE #(  %cid = entity-%cid
+*                           %key = entity-%key
+*                        ) TO failed-header.
+*        ENDLOOP.
+*        EXIT.
+*    ENDTRY.
+*
+*    priceauth_max = number_range_key - number_range_returned_quantity.
+*
+*    " Set Price Authorization ID
+*    LOOP AT entities_wo_id INTO entity.
+*      priceauth_max += 1.
+*      entity-priceauth = priceauth_max .
+*
+*      APPEND VALUE #( %cid  = entity-%cid
+**                      %key  = entity-%key
+*                      priceauth = priceauth_max
+*                      %is_draft = if_abap_behv=>mk-on
+*                    ) TO mapped-header.
+*    ENDLOOP.
+*
+*  ENDMETHOD.
 
   METHOD exportFile.
 
@@ -479,11 +562,14 @@ CLASS lhc_Header IMPLEMENTATION.
     lt_material = VALUE #( FOR ls_key IN keys (
                               %is_draft = ls_key-%is_draft
                               PriceAuth = ls_key-PriceAuth
+                              %pid = ls_key-%pid
                               %target   = VALUE #( FOR ls_row IN lt_rows (
                                                                             %is_draft = ls_key-%is_draft
+                                                                            %pidparent = ls_key-%pid
                                                                             PriceAuth = ls_key-PriceAuth
                                                                             Material = ls_row-Material
                                                                             PriceProt = ls_row-Quantity
+                                                                            %cid = ls_row-Material
                                                                             %control = VALUE #( PriceAuth   = if_abap_behv=>mk-on
                                                                                                 Material    = if_abap_behv=>mk-on
                                                                                                 PriceProt    = if_abap_behv=>mk-on ) ) ) ) ).
@@ -510,13 +596,17 @@ CLASS lhc_Header IMPLEMENTATION.
     ls_customer-Price_New = '400.00'.
     APPEND ls_customer TO lt_data.
 
+    "refer to https://github.com/SAP-samples/abap-cheat-sheets/blob/main/08_EML_ABAP_for_RAP.md when using CID and CID_REF
     lt_customer = VALUE #( FOR ls_row IN lt_rows (
                              %is_draft = keys[ 1 ]-%is_draft
                              PriceAuth = keys[ 1 ]-PriceAuth
                              Material  = ls_row-Material
+                             %cid_ref = ls_row-Material
                              %target   = VALUE #( FOR ls_data IN lt_data (
+                                                                           %cid = |{ ls_row-Material }{ ls_data-Customer }| "CID has to be very unique
                                                                            %is_draft = keys[ 1 ]-%is_draft
                                                                            PriceAuth = keys[ 1 ]-PriceAuth
+                                                                           %pid_header = keys[ 1 ]-%pid
                                                                            Material = ls_row-Material
                                                                            Customer = ls_data-Customer
                                                                            CondType = ls_data-cond_type
@@ -544,23 +634,38 @@ CLASS lhc_Header IMPLEMENTATION.
     FAILED DATA(lt_failed_delete).
 
     "Create records from newly extract data
+*    MODIFY ENTITIES OF zr_pr_auth_head IN LOCAL MODE
+*    ENTITY Header
+*    CREATE BY \_Item
+*    AUTO FILL CID
+*    WITH lt_material
+*    ENTITY Item
+*    CREATE BY \_Customer
+*    AUTO FILL CID
+*    WITH lt_customer
+*    MAPPED DATA(lt_item_mapped)
+*    REPORTED DATA(lt_item_reported)
+*    FAILED DATA(lt_item_failed).
+
     MODIFY ENTITIES OF zr_pr_auth_head IN LOCAL MODE
     ENTITY Header
     CREATE BY \_Item
-    AUTO FILL CID
-    WITH lt_material
+    FROM lt_material
+    ENTITY Item
+    CREATE BY \_Customer
+    FROM lt_customer
     MAPPED DATA(lt_item_mapped)
     REPORTED DATA(lt_item_reported)
     FAILED DATA(lt_item_failed).
 
-    MODIFY ENTITIES OF zr_pr_auth_head IN LOCAL MODE
-    ENTITY Item
-    CREATE BY \_Customer
-    AUTO FILL CID
-    WITH lt_customer
-    MAPPED DATA(lt_customer_mapped)
-    REPORTED DATA(lt_customer_reported)
-    FAILED DATA(lt_customer_failed).
+*    MODIFY ENTITIES OF zr_pr_auth_head IN LOCAL MODE
+*    ENTITY Item
+*    CREATE BY \_Customer
+*    AUTO FILL CID
+*    WITH lt_customer
+*    MAPPED DATA(lt_customer_mapped)
+*    REPORTED DATA(lt_customer_reported)
+*    FAILED DATA(lt_customer_failed).
 
     APPEND VALUE #( %tky = lt_header[ 1 ]-%tky ) TO mapped-header.
 
@@ -674,67 +779,67 @@ CLASS lhc_Header IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD validateOnSave.
-
-    READ ENTITIES OF zr_pr_auth_head IN LOCAL MODE
-        ENTITY Header
-        ALL FIELDS WITH
-        CORRESPONDING #( keys )
-        RESULT DATA(lt_header).
-
-    LOOP AT lt_header INTO DATA(ls_header).
-      APPEND VALUE #(  %tky        = ls_header-%tky
-                       %state_area = 'VALIDATE_ONSAVE'
-                    ) TO reported-header.
-
-      IF ls_header-description IS INITIAL.
-        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
-        APPEND VALUE #( %tky = ls_header-%tky
-                        %state_area         = 'VALIDATE_ONSAVE'
-                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
-                                                          text = 'Fill up mandatory fields' )
-
-                        %element-Description   = if_abap_behv=>mk-on
-                       ) TO reported-header.
-      ENDIF.
-
-      IF ls_header-validfrom IS INITIAL.
-        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
-        APPEND VALUE #( %tky = ls_header-%tky
-                        %state_area         = 'VALIDATE_ONSAVE'
-                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
-                                                          text = 'Fill up mandatory fields' )
-
-                        %element-validfrom   = if_abap_behv=>mk-on
-                       ) TO reported-header.
-      ENDIF.
-
-      IF ls_header-validto IS INITIAL.
-        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
-        APPEND VALUE #( %tky = ls_header-%tky
-                        %state_area         = 'VALIDATE_ONSAVE'
-                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
-                                                          text = 'Fill up mandatory fields' )
-
-                        %element-validto   = if_abap_behv=>mk-on
-                       ) TO reported-header.
-      ENDIF.
-
-      IF ls_header-submittedto IS INITIAL.
-        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
-        APPEND VALUE #( %tky = ls_header-%tky
-                        %state_area         = 'VALIDATE_ONSAVE'
-                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
-                                                          text = 'Fill up mandatory fields' )
-
-                        %element-submittedto   = if_abap_behv=>mk-on
-                       ) TO reported-header.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD validateheader.
-  ENDMETHOD.
+*  METHOD validateOnSave.
+*
+*    READ ENTITIES OF zr_pr_auth_head IN LOCAL MODE
+*        ENTITY Header
+*        ALL FIELDS WITH
+*        CORRESPONDING #( keys )
+*        RESULT DATA(lt_header).
+*
+*    LOOP AT lt_header INTO DATA(ls_header).
+*      APPEND VALUE #(  %tky        = ls_header-%tky
+*                       %state_area = 'VALIDATE_ONSAVE'
+*                    ) TO reported-header.
+*
+*      IF ls_header-description IS INITIAL.
+*        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
+*        APPEND VALUE #( %tky = ls_header-%tky
+*                        %state_area         = 'VALIDATE_ONSAVE'
+*                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
+*                                                          text = 'Fill up mandatory fields' )
+*
+*                        %element-Description   = if_abap_behv=>mk-on
+*                       ) TO reported-header.
+*      ENDIF.
+*
+*      IF ls_header-validfrom IS INITIAL.
+*        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
+*        APPEND VALUE #( %tky = ls_header-%tky
+*                        %state_area         = 'VALIDATE_ONSAVE'
+*                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
+*                                                          text = 'Fill up mandatory fields' )
+*
+*                        %element-validfrom   = if_abap_behv=>mk-on
+*                       ) TO reported-header.
+*      ENDIF.
+*
+*      IF ls_header-validto IS INITIAL.
+*        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
+*        APPEND VALUE #( %tky = ls_header-%tky
+*                        %state_area         = 'VALIDATE_ONSAVE'
+*                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
+*                                                          text = 'Fill up mandatory fields' )
+*
+*                        %element-validto   = if_abap_behv=>mk-on
+*                       ) TO reported-header.
+*      ENDIF.
+*
+*      IF ls_header-submittedto IS INITIAL.
+*        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
+*        APPEND VALUE #( %tky = ls_header-%tky
+*                        %state_area         = 'VALIDATE_ONSAVE'
+*                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
+*                                                          text = 'Fill up mandatory fields' )
+*
+*                        %element-submittedto   = if_abap_behv=>mk-on
+*                       ) TO reported-header.
+*      ENDIF.
+*    ENDLOOP.
+*
+*  ENDMETHOD.
+*
+*  METHOD validateheader.
+*  ENDMETHOD.
 
 ENDCLASS.

@@ -1,15 +1,14 @@
 managed implementation in class zbp_r_pr_auth_head unique;
-//strict ( 2 );
 strict ( 1 );
 with draft;
 
 define behavior for ZR_PR_AUTH_HEAD alias Header
 persistent table zpr_auth_head
 draft table zdpr_auth_head
+etag master Locallastchangedat
 lock master total etag Locallastchangedat
-early numbering
+late numbering
 authorization master ( instance )
-
 {
   create;
   update;
@@ -28,7 +27,7 @@ authorization master ( instance )
   action validateEntries;
   action submit result [1] entity ZR_PR_AUTH_HEAD;
 
-  validation validateOnSave on save { create; update; }
+//  validation validateOnSave on save { create; update; }
 
   side effects
   {
@@ -45,6 +44,7 @@ authorization master ( instance )
       ValidFrom          = valid_from;
       ValidTo            = valid_to;
       status             = status;
+      StatusText         = statustext;
       submittedto        = submitted_to;
       notify             = notify;
       attachmentupload   = attachment_u;
@@ -67,6 +67,7 @@ draft table zdpr_auth_item
 lock dependent by _Header
 authorization dependent by _Header
 etag master LocalLastChangedAt
+late numbering
 {
   update;
   delete;
@@ -78,7 +79,7 @@ etag master LocalLastChangedAt
 
   action addNotes parameter zpr_auth_item_notes;
 
-  determination setDefaultValues on modify { create; }
+  determination setDefaultValues on modify { create;}
   determination onModifyPriceProt on modify { create; field PriceProt; }
 
   side effects
@@ -119,6 +120,7 @@ draft table zdpr_auth_price
 lock dependent by _Header
 authorization dependent by _Header
 etag master LocalLastChangedAt
+late numbering
 {
   update;
   internal delete;
@@ -167,6 +169,7 @@ draft table zdpr_auth_cust
 lock dependent by _Header
 authorization dependent by _Header
 etag master LocalLastChangedAt
+late numbering
 {
   update;
   delete;
