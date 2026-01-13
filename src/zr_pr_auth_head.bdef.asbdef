@@ -27,7 +27,7 @@ authorization master ( instance )
   action validateEntries;
   action submit result [1] entity ZR_PR_AUTH_HEAD;
 
-//  validation validateOnSave on save { create; update; }
+  validation validateOnCreate on save { create; }
 
   side effects
   {

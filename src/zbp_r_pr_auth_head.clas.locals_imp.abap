@@ -360,6 +360,8 @@ CLASS lhc_Header DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS validateentries FOR MODIFY
       IMPORTING keys FOR ACTION header~validateentries.
+    METHODS validateoncreate FOR VALIDATE ON SAVE
+      IMPORTING keys FOR header~validateoncreate.
 *    METHODS validateonsave FOR VALIDATE ON SAVE
 *      IMPORTING keys FOR header~validateonsave.
 *    METHODS earlynumbering_create FOR NUMBERING
@@ -841,5 +843,33 @@ CLASS lhc_Header IMPLEMENTATION.
 *
 *  METHOD validateheader.
 *  ENDMETHOD.
+
+  METHOD validateOnCreate.
+    READ ENTITIES OF zr_pr_auth_head IN LOCAL MODE
+       ENTITY Header
+       ALL FIELDS
+       WITH CORRESPONDING #( keys )
+       RESULT DATA(lt_header)
+       ENTITY Header BY \_Item
+       ALL FIELDS
+       WITH CORRESPONDING #( keys )
+       LINK DATA(item_links)
+       RESULT DATA(lt_items).
+
+    LOOP AT lt_header INTO DATA(ls_header).
+*        APPEND VALUE #(  %tky                 = ls_header-%tky
+*                         %state_area          = 'VALIDATE_ITEMS'
+*                       ) TO reported-header.
+      READ TABLE lt_items TRANSPORTING NO FIELDS WITH KEY %pidparent = ls_header-%pid.
+      IF sy-subrc <> 0.
+        APPEND VALUE #( %tky = ls_header-%tky ) TO failed-header.
+        APPEND VALUE #( %tky = ls_header-%tky
+                        %state_area         = 'VALIDATE_ITEMS'
+                        %msg = new_message_with_text( severity = if_abap_behv_message=>severity-error
+                                                          text = 'Enter at least one material' )
+                       ) TO reported-header.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
 
 ENDCLASS.
