@@ -247,7 +247,7 @@ CLASS lhc_item IMPLEMENTATION.
                                                                            PriceAuth = ls_key-PriceAuth
                                                                            Material = ls_key-Material
                                                                            %pidparent = ls_key-%pid
-                                                                           %pid_header = ls_item-%pidparent
+*                                                                           %pid_header = ls_item-%pidparent
                                                                            CondType = ls_data-cond_type
                                                                            %control = VALUE #( PriceAuth   = if_abap_behv=>mk-on
                                                                                                Material    = if_abap_behv=>mk-on
